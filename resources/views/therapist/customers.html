@@ -1,0 +1,65 @@
+<?php
+$title = 'My Customers - ZenBook';
+ob_start();
+?>
+<div class="page-header">
+    <h1>My Customers</h1>
+    <p>View all customers who have booked with you</p>
+</div>
+
+<div class="card">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; flex-wrap: wrap; gap: 15px;">
+        <div>
+            <h2 style="margin: 0; font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 24px; color: var(--text-dark); display: flex; align-items: center; gap: 12px;">
+                <span style="width: 40px; height: 40px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; color: white;">👥</span>
+                Customer List
+            </h2>
+            <p style="color: var(--text-light); margin-top: 8px; font-size: 14px;">All customers who have made bookings with you</p>
+        </div>
+    </div>
+    
+    <?php if ($customers->count() > 0): ?>
+        <div style="overflow-x: auto; border-radius: 16px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Total Bookings</th>
+                        <th>Registered</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach($customers as $customer): ?>
+                    <tr>
+                        <td style="font-weight: 600; color: var(--text-dark);">
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <span style="width: 40px; height: 40px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 16px; font-weight: 600;"><?php echo strtoupper(substr($customer->name, 0, 1)); ?></span>
+                                <?php echo htmlspecialchars($customer->name); ?>
+                            </div>
+                        </td>
+                        <td style="color: var(--text-dark);"><?php echo htmlspecialchars($customer->email); ?></td>
+                        <td>
+                            <span style="padding: 6px 12px; background: var(--primary-light); color: var(--primary-dark); border-radius: 8px; font-size: 13px; font-weight: 600;">
+                                <?php echo $customer->customer_bookings_count; ?> booking<?php echo $customer->customer_bookings_count != 1 ? 's' : ''; ?>
+                            </span>
+                        </td>
+                        <td style="color: var(--text-light); font-size: 13px;"><?php echo $customer->created_at->format('M d, Y'); ?></td>
+                    </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
+    <?php else: ?>
+        <div style="text-align: center; padding: 60px 20px; background: var(--bg-light); border-radius: 16px;">
+            <div style="font-size: 64px; margin-bottom: 20px;">👥</div>
+            <h3 style="color: var(--text-dark); margin-bottom: 10px; font-family: 'Space Grotesk', sans-serif; font-weight: 600;">No customers yet</h3>
+            <p style="color: var(--text-light);">Customers will appear here once they book a session with you</p>
+        </div>
+    <?php endif; ?>
+</div>
+<?php
+$content = ob_get_clean();
+include resource_path('views/layouts/therapist.html');
+?>
+

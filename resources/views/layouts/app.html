@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="<?php echo str_replace('_', '-', app()->getLocale()); ?>">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title><?php echo isset($title) ? htmlspecialchars($title) : 'ZenBook - Massage Booking System'; ?></title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        :root {
+            --primary: #1e40af;
+            --primary-dark: #1e3a8a;
+            --primary-light: #3b82f6;
+            --secondary: #60a5fa;
+            --accent: #2563eb;
+            --dark-bg: #0f172a;
+            --dark-card: #1e293b;
+            --dark-border: #334155;
+            --text-dark: #0f172a;
+            --text-medium: #475569;
+            --text-light: #64748b;
+            --text-white: #f1f5f9;
+            --bg-light: #f8fafc;
+            --bg-white: #ffffff;
+            --border: #e2e8f0;
+            --shadow: rgba(0, 0, 0, 0.1);
+            --shadow-lg: rgba(0, 0, 0, 0.15);
+        }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 25%, #334155 50%, #475569 75%, #64748b 100%);
+            background-size: 400% 400%;
+            background-attachment: fixed;
+            animation: gradientShift 20s ease infinite;
+            min-height: 100vh;
+            color: var(--text-white);
+            position: relative;
+            font-weight: 400;
+            letter-spacing: -0.01em;
+        }
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(circle at 20% 30%, rgba(59, 130, 246, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 80% 70%, rgba(37, 99, 235, 0.15) 0%, transparent 50%);
+            animation: float 25s ease-in-out infinite;
+            pointer-events: none;
+            z-index: 0;
+        }
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0) rotate(0deg); }
+            33% { transform: translate(30px, -30px) rotate(120deg); }
+            66% { transform: translate(-30px, 30px) rotate(240deg); }
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+            position: relative;
+            z-index: 1;
+        }
+        .navbar {
+            background: rgba(30, 41, 59, 0.95);
+            backdrop-filter: blur(20px);
+            padding: 20px 30px;
+            border-radius: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid rgba(59, 130, 246, 0.2);
+        }
+        .navbar-brand {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 26px;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            color: var(--text-white);
+        }
+        .navbar-user {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .navbar-user span {
+            color: var(--text-light);
+            font-size: 14px;
+        }
+        .navbar-user .role-badge {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        .navbar a {
+            color: var(--text-white);
+            text-decoration: none;
+            font-weight: 500;
+            padding: 8px 16px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+        .navbar a:hover {
+            background: rgba(59, 130, 246, 0.2);
+            color: var(--text-white);
+        }
+        .card {
+            background: rgba(30, 41, 59, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+            padding: 40px;
+            margin-bottom: 30px;
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 25px 70px rgba(0, 0, 0, 0.5);
+            border-color: rgba(59, 130, 246, 0.4);
+        }
+        .btn {
+            padding: 14px 28px;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.3s ease;
+            font-size: 15px;
+            position: relative;
+            overflow: hidden;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+        }
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+        .btn:hover::before {
+            width: 300px;
+            height: 300px;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(30, 64, 175, 0.4);
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(30, 64, 175, 0.5);
+        }
+        .btn-success {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+        }
+        .btn-danger {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);
+        }
+        .btn-info {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+        .form-group {
+            margin-bottom: 24px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--text-white);
+            font-size: 14px;
+        }
+        input, select, textarea {
+            width: 100%;
+            padding: 14px 18px;
+            border: 2px solid var(--dark-border);
+            border-radius: 12px;
+            font-size: 15px;
+            transition: all 0.3s ease;
+            background: rgba(15, 23, 42, 0.6);
+            color: var(--text-white);
+            font-family: 'Inter', sans-serif;
+            font-weight: 400;
+        }
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(30, 64, 175, 0.2);
+            background: rgba(15, 23, 42, 0.8);
+        }
+        input::placeholder, textarea::placeholder {
+            color: var(--text-light);
+        }
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+        .alert {
+            padding: 16px 20px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+            border-left: 4px solid;
+            animation: slideIn 0.3s ease;
+        }
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .alert-success {
+            background: #d1fae5;
+            color: #065f46;
+            border-color: #10b981;
+        }
+        .alert-error {
+            background: #fee2e2;
+            color: #991b1b;
+            border-color: #ef4444;
+        }
+        .alert ul {
+            margin-left: 20px;
+        }
+        .table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin-top: 20px;
+            background: rgba(15, 23, 42, 0.6);
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+        }
+        .table th {
+            background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
+            color: white;
+            padding: 16px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .table td {
+            padding: 16px;
+            border-bottom: 1px solid var(--dark-border);
+            color: var(--text-white);
+        }
+        .table tr:last-child td {
+            border-bottom: none;
+        }
+        .table tr:hover {
+            background: rgba(59, 130, 246, 0.1);
+        }
+        .badge {
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            display: inline-block;
+            text-transform: capitalize;
+        }
+        .badge-pending {
+            background: rgba(245, 158, 11, 0.2);
+            color: #fbbf24;
+            border: 1px solid rgba(245, 158, 11, 0.3);
+        }
+        .badge-approved {
+            background: rgba(16, 185, 129, 0.2);
+            color: #34d399;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+        .badge-declined {
+            background: rgba(239, 68, 68, 0.2);
+            color: #f87171;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+        .badge-in-progress {
+            background: rgba(59, 130, 246, 0.2);
+            color: #60a5fa;
+            border: 1px solid rgba(59, 130, 246, 0.3);
+        }
+        .badge-completed {
+            background: rgba(139, 92, 246, 0.2);
+            color: #a78bfa;
+            border: 1px solid rgba(139, 92, 246, 0.3);
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 24px;
+            margin-bottom: 40px;
+        }
+        .stat-card {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.85) 100%);
+            backdrop-filter: blur(10px);
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            transition: transform 0.3s ease;
+        }
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+        .stat-card h3 {
+            font-size: 42px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+        .stat-card p {
+            color: var(--text-light);
+            font-weight: 500;
+            font-size: 14px;
+        }
+        .filter-buttons {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+        .filter-btn {
+            padding: 10px 20px;
+            border: 2px solid var(--dark-border);
+            background: rgba(15, 23, 42, 0.6);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            color: var(--text-white);
+            font-weight: 500;
+            font-size: 14px;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+            display: inline-block;
+        }
+        .filter-btn.active {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            border-color: var(--primary);
+            box-shadow: 0 4px 15px rgba(30, 64, 175, 0.4);
+        }
+        .filter-btn:hover {
+            border-color: var(--primary);
+            background: rgba(59, 130, 246, 0.2);
+            transform: translateY(-2px);
+        }
+        h1, h2 {
+            font-family: 'Space Grotesk', sans-serif;
+            color: var(--text-white);
+            margin-bottom: 20px;
+        }
+        h1 {
+            font-size: 36px;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+        }
+        h2 {
+            font-size: 28px;
+            font-weight: 700;
+        }
+        @media (max-width: 1024px) {
+            .container {
+                padding: 15px;
+            }
+            .card {
+                padding: 30px;
+            }
+            .table {
+                font-size: 14px;
+            }
+            .table th,
+            .table td {
+                padding: 12px 10px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 12px;
+            }
+            .card {
+                padding: 24px 20px;
+                border-radius: 16px;
+            }
+            .navbar {
+                flex-direction: column;
+                gap: 15px;
+                padding: 16px 20px;
+                border-radius: 16px;
+            }
+            .navbar-brand {
+                font-size: 22px;
+            }
+            .navbar-user {
+                flex-direction: column;
+                gap: 12px;
+                width: 100%;
+            }
+            .navbar-user a {
+                width: 100%;
+                text-align: center;
+                padding: 10px;
+            }
+            h1 {
+                font-size: 28px;
+                margin-bottom: 12px;
+            }
+            h2 {
+                font-size: 24px;
+            }
+            .stats-grid {
+                grid-template-columns: 1fr;
+                gap: 16px;
+            }
+            .stat-card {
+                padding: 24px;
+            }
+            .stat-card h3 {
+                font-size: 36px;
+            }
+            .filter-buttons {
+                gap: 8px;
+                overflow-x: auto;
+                padding-bottom: 8px;
+                -webkit-overflow-scrolling: touch;
+                scrollbar-width: none;
+            }
+            .filter-buttons::-webkit-scrollbar {
+                display: none;
+            }
+            .filter-btn {
+                padding: 8px 16px;
+                font-size: 13px;
+                white-space: nowrap;
+                flex-shrink: 0;
+            }
+            .table {
+                display: block;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                font-size: 13px;
+            }
+            .table thead,
+            .table tbody,
+            .table tr {
+                display: block;
+            }
+            .table thead {
+                display: none;
+            }
+            .table tr {
+                margin-bottom: 16px;
+                background: rgba(15, 23, 42, 0.8);
+                border-radius: 12px;
+                padding: 12px;
+                border: 1px solid rgba(59, 130, 246, 0.2);
+            }
+            .table td {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 10px 0;
+                border-bottom: 1px solid var(--dark-border);
+            }
+            .table td:last-child {
+                border-bottom: none;
+            }
+            .table td::before {
+                content: attr(data-label);
+                font-weight: 600;
+                color: var(--text-light);
+                margin-right: 12px;
+                text-transform: uppercase;
+                font-size: 11px;
+                letter-spacing: 0.5px;
+                flex-shrink: 0;
+            }
+            .table td {
+                flex-wrap: wrap;
+            }
+            .table td .badge {
+                margin-left: auto;
+            }
+            .btn {
+                padding: 12px 20px;
+                font-size: 14px;
+                width: 100%;
+                text-align: center;
+            }
+            input, select, textarea {
+                font-size: 16px; /* Prevents zoom on iOS */
+            }
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 10px;
+            }
+            .card {
+                padding: 20px 16px;
+                border-radius: 12px;
+            }
+            .navbar {
+                padding: 12px 16px;
+                border-radius: 12px;
+            }
+            .navbar-brand {
+                font-size: 20px;
+            }
+            h1 {
+                font-size: 24px;
+            }
+            h2 {
+                font-size: 20px;
+            }
+            .stat-card {
+                padding: 20px;
+            }
+            .stat-card h3 {
+                font-size: 32px;
+            }
+            .filter-btn {
+                padding: 6px 12px;
+                font-size: 12px;
+            }
+            .table td {
+                padding: 8px 0;
+                font-size: 12px;
+            }
+            .badge {
+                padding: 4px 10px;
+                font-size: 11px;
+            }
+            .btn {
+                padding: 14px 18px;
+                font-size: 14px;
+            }
+        }
+    </style>
+    <?php if (isset($styles)) echo $styles; ?>
+</head>
+<body>
+    <?php if (Auth::check()): ?>
+    <div class="container">
+        <nav class="navbar">
+            <div>
+                <div class="navbar-brand">ZenBook</div>
+            </div>
+            <div class="navbar-user">
+                <?php 
+                $user = Auth::user();
+                if ($user->profile_image) {
+                    $storageUrl = \Illuminate\Support\Facades\Storage::disk('public')->url($user->profile_image);
+                    // Fix URL if accessing via 127.0.0.1 but APP_URL is localhost
+                    $currentUrl = request()->getSchemeAndHttpHost();
+                    if (strpos($storageUrl, 'http://localhost') === 0 && strpos($currentUrl, '127.0.0.1') !== false) {
+                        $storageUrl = str_replace('http://localhost', $currentUrl, $storageUrl);
+                    }
+                    $profileImageUrl = $storageUrl . '?v=' . ($user->updated_at ? $user->updated_at->timestamp : time());
+                } else {
+                    $profileImageUrl = 'data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2740%27 height=%2740%27%3E%3Crect fill=%27%23e5e7eb%27 width=%2740%27 height=%2740%27/%3E%3Ctext x=%2750%25%27 y=%2750%25%27 text-anchor=%27middle%27 dy=%27.3em%27 fill=%27%236b7280%27 font-family=%27Arial%27 font-size=%2716%27%3E👤%3C/text%3E%3C/svg%3E';
+                }
+                ?>
+                <a href="<?php echo route('profile.show'); ?>" style="display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--text-dark); margin-right: 15px; padding: 5px 10px; border-radius: 12px; transition: all 0.3s ease;" onmouseover="this.style.background='rgba(34, 197, 94, 0.1)'" onmouseout="this.style.background='transparent'">
+                    <img 
+                        src="<?php echo htmlspecialchars($profileImageUrl); ?>" 
+                        alt="Profile" 
+                        style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 2px solid var(--primary);"
+                        onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2740%27 height=%2740%27%3E%3Crect fill=%27%23e5e7eb%27 width=%2740%27 height=%2740%27/%3E%3Ctext x=%2750%25%27 y=%2750%25%27 text-anchor=%27middle%27 dy=%27.3em%27 fill=%27%236b7280%27 font-family=%27Arial%27 font-size=%2716%27%3E👤%3C/text%3E%3C/svg%3E';"
+                    >
+                    <div style="text-align: left;">
+                        <div style="font-weight: 600; font-size: 14px; color: var(--text-white);"><?php echo htmlspecialchars(Auth::user()->name); ?></div>
+                        <div style="font-size: 12px; color: var(--text-light);"><?php echo Auth::user()->role == 'cleaner' ? 'Massage Therapist' : ucfirst(Auth::user()->role); ?></div>
+                    </div>
+                </a>
+                <a href="<?php echo route('profile.show'); ?>" style="color: var(--text-white); text-decoration: none; font-weight: 500; padding: 8px 16px; border-radius: 8px; transition: all 0.3s ease;" onmouseover="this.style.background='rgba(59, 130, 246, 0.2)'" onmouseout="this.style.background='transparent'">Profile</a>
+                <a href="<?php echo route('logout'); ?>" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">Logout</a>
+                <form id="logout-form" action="<?php echo route('logout'); ?>" method="POST" style="display: none;">
+                    <input type="hidden" name="_token" value="<?php echo csrf_token(); ?>">
+                </form>
+                <script>
+                    document.getElementById('logout-form').addEventListener('submit', function() {
+                        // Clear bearer token from localStorage
+                        localStorage.removeItem('auth_token');
+                    });
+                </script>
+            </div>
+        </nav>
+    </div>
+    <?php endif; ?>
+
+    <div class="container">
+        <?php if (session('success')): ?>
+            <div class="alert alert-success">
+                <?php echo htmlspecialchars(session('success')); ?>
+            </div>
+        <?php endif; ?>
+
+        <?php if (session('error')): ?>
+            <div class="alert alert-error">
+                <?php echo htmlspecialchars(session('error')); ?>
+            </div>
+        <?php endif; ?>
+
+        <?php if (isset($errors) && $errors->any()): ?>
+            <div class="alert alert-error">
+                <ul>
+                    <?php foreach($errors->all() as $error): ?>
+                        <li><?php echo htmlspecialchars($error); ?></li>
+                    <?php endforeach; ?>
+                </ul>
+            </div>
+        <?php endif; ?>
+
+        <?php if (isset($content)) echo $content; ?>
+    </div>
+
+    <?php if (isset($scripts)) echo $scripts; ?>
+</body>
+</html>

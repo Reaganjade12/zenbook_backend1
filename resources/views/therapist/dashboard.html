@@ -1,0 +1,172 @@
+<?php
+$title = 'Therapist Dashboard - ZenBook';
+ob_start();
+?>
+<!-- Statistics Cards -->
+<div class="stats-grid">
+    <?php
+    $totalBookings = $bookings->count();
+    $pendingBookings = $bookings->where('status', 'pending')->count();
+    $approvedBookings = $bookings->where('status', 'approved')->count();
+    $inProgressBookings = $bookings->where('status', 'in_progress')->count();
+    $completedBookings = $bookings->where('status', 'completed')->count();
+    ?>
+    
+    <div class="stat-card" style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); border: none;">
+        <div class="stat-card-header">
+            <div class="stat-icon" style="background: rgba(255,255,255,0.2); color: white; font-size: 24px; font-weight: normal; line-height: 1;">📋</div>
+        </div>
+        <div class="stat-value" style="color: white;"><?php echo $totalBookings; ?></div>
+        <div class="stat-label" style="color: rgba(255,255,255,0.9);">Total Bookings</div>
+    </div>
+
+    <div class="stat-card" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); border: none;">
+        <div class="stat-card-header">
+            <div class="stat-icon" style="background: rgba(255,255,255,0.2); color: white; font-size: 24px; font-weight: normal; line-height: 1;">⏳</div>
+        </div>
+        <div class="stat-value" style="color: white;"><?php echo $pendingBookings; ?></div>
+        <div class="stat-label" style="color: rgba(255,255,255,0.9);">Pending</div>
+    </div>
+
+    <div class="stat-card" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); border: none;">
+        <div class="stat-card-header">
+            <div class="stat-icon" style="background: rgba(255,255,255,0.2); color: white; font-size: 24px; font-weight: normal; line-height: 1;">✓</div>
+        </div>
+        <div class="stat-value" style="color: white;"><?php echo $approvedBookings; ?></div>
+        <div class="stat-label" style="color: rgba(255,255,255,0.9);">Approved</div>
+    </div>
+
+    <div class="stat-card" style="background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%); border: none;">
+        <div class="stat-card-header">
+            <div class="stat-icon" style="background: rgba(255,255,255,0.2); color: white; font-size: 24px; font-weight: normal; line-height: 1;">↻</div>
+        </div>
+        <div class="stat-value" style="color: white;"><?php echo $inProgressBookings; ?></div>
+        <div class="stat-label" style="color: rgba(255,255,255,0.9);">In Progress</div>
+    </div>
+
+    <div class="stat-card" style="background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); border: none;">
+        <div class="stat-card-header">
+            <div class="stat-icon" style="background: rgba(255,255,255,0.2); color: white; font-size: 24px; font-weight: normal; line-height: 1;">✓</div>
+        </div>
+        <div class="stat-value" style="color: white;"><?php echo $completedBookings; ?></div>
+        <div class="stat-label" style="color: rgba(255,255,255,0.9);">Completed</div>
+    </div>
+
+    <div class="stat-card" style="background: linear-gradient(135deg, <?php echo isset($isAvailable) && $isAvailable ? '#10b981' : '#ef4444'; ?> 0%, <?php echo isset($isAvailable) && $isAvailable ? '#059669' : '#dc2626'; ?> 100%); border: none;">
+        <div class="stat-card-header">
+            <div class="stat-icon" style="background: rgba(255,255,255,0.2); color: white; font-size: 24px; font-weight: normal; line-height: 1;"><?php echo isset($isAvailable) && $isAvailable ? '✓' : '✗'; ?></div>
+        </div>
+        <div class="stat-value" style="color: white; font-size: 20px;">
+            <?php echo isset($isAvailable) && $isAvailable ? 'Available' : 'Unavailable'; ?>
+        </div>
+        <form action="<?php echo route('therapist.toggle-availability'); ?>" method="POST" style="margin-top: 12px;">
+            <input type="hidden" name="_token" value="<?php echo csrf_token(); ?>">
+            <button type="submit" class="btn" style="width: 100%; background: rgba(255,255,255,0.2); color: white; border: 2px solid white; padding: 8px; font-size: 13px;">
+                Toggle Status
+            </button>
+        </form>
+    </div>
+</div>
+
+<!-- Recent Bookings -->
+<div class="card">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; flex-wrap: wrap; gap: 15px;">
+        <div>
+            <h2 style="margin: 0; font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 24px; color: white; display: flex; align-items: center; gap: 12px;">
+                <span style="width: 40px; height: 40px; background: rgba(59, 130, 246, 0.2); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; color: white; line-height: 1;">📋</span>
+                Recent Bookings
+            </h2>
+            <p style="color: var(--dark-text-muted); margin-top: 8px; font-size: 14px;">Your latest booking requests</p>
+        </div>
+        <a href="<?php echo route('therapist.bookings'); ?>" class="btn btn-primary" style="text-decoration: none;">
+            View All Bookings →
+        </a>
+    </div>
+
+    <?php if ($bookings->count() > 0): ?>
+        <div style="overflow-x: auto; border-radius: 12px;">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Time</th>
+                        <th>Customer</th>
+                        <th>Massage Type</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach($bookings->take(5) as $booking): ?>
+                    <tr>
+                        <td style="font-weight: 600; color: var(--dark-text);"><?php echo $booking->booking_date->format('M d, Y'); ?></td>
+                        <td style="color: var(--dark-text);"><?php echo date('h:i A', strtotime($booking->booking_time)); ?></td>
+                        <td style="font-weight: 600; color: var(--dark-text);">
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <span style="width: 32px; height: 32px; background: rgba(59, 130, 246, 0.3); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 14px; font-weight: 600;"><?php echo strtoupper(substr($booking->customer->name, 0, 1)); ?></span>
+                                <?php echo htmlspecialchars($booking->customer->name); ?>
+                            </div>
+                        </td>
+                        <td style="color: var(--dark-text);">
+                            <span style="padding: 6px 12px; background: rgba(255,255,255,0.05); border-radius: 8px; font-size: 13px; font-weight: 500;"><?php echo htmlspecialchars($booking->service_type); ?></span>
+                        </td>
+                        <td>
+                            <span class="badge badge-<?php echo str_replace('_', '-', $booking->status); ?>">
+                                <?php echo ucfirst(str_replace('_', ' ', $booking->status)); ?>
+                            </span>
+                        </td>
+                        <td>
+                            <?php if ($booking->status == 'pending' && $booking->therapist_id == Auth::id()): ?>
+                                <div style="display: flex; gap: 8px;">
+                                    <form action="<?php echo route('therapist.booking.accept', $booking->id); ?>" method="POST" style="display: inline;">
+                                        <input type="hidden" name="_token" value="<?php echo csrf_token(); ?>">
+                                        <button type="submit" class="btn btn-success" style="padding: 6px 12px; font-size: 12px; border-radius: 6px;">
+                                            ✓ Accept
+                                        </button>
+                                    </form>
+                                    <form action="<?php echo route('therapist.booking.decline', $booking->id); ?>" method="POST" style="display: inline;">
+                                        <input type="hidden" name="_token" value="<?php echo csrf_token(); ?>">
+                                        <button type="submit" class="btn btn-danger" style="padding: 6px 12px; font-size: 12px; border-radius: 6px;">
+                                            ✗ Decline
+                                        </button>
+                                    </form>
+                                </div>
+                            <?php elseif ($booking->status == 'approved' && $booking->therapist_id == Auth::id()): ?>
+                                <form action="<?php echo route('therapist.booking.update-status', $booking->id); ?>" method="POST" style="display: inline;">
+                                    <input type="hidden" name="_token" value="<?php echo csrf_token(); ?>">
+                                    <input type="hidden" name="status" value="in_progress">
+                                    <button type="submit" class="btn btn-info" style="padding: 6px 12px; font-size: 12px; border-radius: 6px;">
+                                        ▶ Start
+                                    </button>
+                                </form>
+                            <?php elseif ($booking->status == 'in_progress' && $booking->therapist_id == Auth::id()): ?>
+                                <form action="<?php echo route('therapist.booking.update-status', $booking->id); ?>" method="POST" style="display: inline;">
+                                    <input type="hidden" name="_token" value="<?php echo csrf_token(); ?>">
+                                    <input type="hidden" name="status" value="completed">
+                                    <button type="submit" class="btn btn-success" style="padding: 6px 12px; font-size: 12px; border-radius: 6px;">
+                                        ✓ Complete
+                                    </button>
+                                </form>
+                            <?php elseif ($booking->status == 'completed'): ?>
+                                <span style="color: #34d399; font-weight: 600;">✓ Completed</span>
+                            <?php elseif ($booking->status == 'declined'): ?>
+                                <span style="color: #f87171;">Declined</span>
+                            <?php endif; ?>
+                        </td>
+                    </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
+    <?php else: ?>
+        <div style="text-align: center; padding: 60px 20px; background: rgba(255,255,255,0.02); border-radius: 16px;">
+            <div style="font-size: 64px; margin-bottom: 20px; color: var(--dark-text-muted);">○</div>
+            <h3 style="color: var(--dark-text); margin-bottom: 10px; font-family: 'Space Grotesk', sans-serif; font-weight: 600;">No booking requests</h3>
+            <p style="color: var(--dark-text-muted);">New booking requests will appear here</p>
+        </div>
+    <?php endif; ?>
+</div>
+<?php
+$content = ob_get_clean();
+include resource_path('views/layouts/therapist.html');
+?>

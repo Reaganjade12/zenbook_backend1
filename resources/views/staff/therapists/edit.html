@@ -1,0 +1,72 @@
+<?php
+$title = 'Edit Therapist - ZenBook';
+ob_start();
+?>
+<div class="page-header" style="margin-bottom: 30px;">
+    <h1 style="color: var(--dark-text); margin-bottom: 8px; font-size: clamp(24px, 5vw, 32px);">Edit Therapist</h1>
+    <p style="color: var(--dark-text-muted); font-size: 14px;">Update therapist information</p>
+</div>
+
+<div class="card" style="max-width: 700px; width: 100%;">
+    <form method="POST" action="<?php echo route('staff.therapists.update', $user->id); ?>">
+        <input type="hidden" name="_token" value="<?php echo csrf_token(); ?>">
+        <input type="hidden" name="_method" value="PUT">
+        
+        <h3 style="margin-bottom: 20px; font-family: 'Space Grotesk', sans-serif; font-weight: 700; letter-spacing: -0.02em; color: var(--dark-text);">Account Information</h3>
+        
+        <div style="margin-bottom: 20px;">
+            <label for="name" style="display: block; margin-bottom: 8px; font-weight: 500; color: var(--dark-text);">Full Name *</label>
+            <input type="text" id="name" name="name" value="<?php echo htmlspecialchars(old('name', $user->name)); ?>" required style="width: 100%; padding: 14px 16px; border: 2px solid var(--dark-border); border-radius: 10px; font-size: 16px; background: rgba(15, 23, 42, 0.6); color: var(--dark-text);">
+        </div>
+
+        <div style="margin-bottom: 20px;">
+            <label for="email" style="display: block; margin-bottom: 8px; font-weight: 500; color: var(--dark-text);">Email Address *</label>
+            <input type="email" id="email" name="email" value="<?php echo htmlspecialchars(old('email', $user->email)); ?>" required style="width: 100%; padding: 14px 16px; border: 2px solid var(--dark-border); border-radius: 10px; font-size: 16px; background: rgba(15, 23, 42, 0.6); color: var(--dark-text);">
+        </div>
+
+        <div style="margin-bottom: 20px;">
+            <label for="password" style="display: block; margin-bottom: 8px; font-weight: 500; color: var(--dark-text);">New Password (leave blank to keep current)</label>
+            <input type="password" id="password" name="password" style="width: 100%; padding: 14px 16px; border: 2px solid var(--dark-border); border-radius: 10px; font-size: 16px; background: rgba(15, 23, 42, 0.6); color: var(--dark-text);">
+            <small style="color: var(--dark-text-muted); font-size: 12px; display: block; margin-top: 5px;">Minimum 8 characters. Leave blank if you don't want to change the password.</small>
+        </div>
+
+        <div style="margin-bottom: 20px;">
+            <label for="password_confirmation" style="display: block; margin-bottom: 8px; font-weight: 500; color: var(--dark-text);">Confirm New Password</label>
+            <input type="password" id="password_confirmation" name="password_confirmation" style="width: 100%; padding: 14px 16px; border: 2px solid var(--dark-border); border-radius: 10px; font-size: 16px; background: rgba(15, 23, 42, 0.6); color: var(--dark-text);">
+        </div>
+
+        <h3 style="margin: 30px 0 20px 0; font-family: 'Space Grotesk', sans-serif; font-weight: 700; letter-spacing: -0.02em; color: var(--dark-text);">Profile Information</h3>
+
+        <div style="margin-bottom: 20px;">
+            <label for="phone" style="display: block; margin-bottom: 8px; font-weight: 500; color: var(--dark-text);">Phone Number</label>
+            <input type="tel" id="phone" name="phone" value="<?php echo htmlspecialchars(old('phone', $user->therapist ? $user->therapist->phone : '')); ?>" style="width: 100%; padding: 14px 16px; border: 2px solid var(--dark-border); border-radius: 10px; font-size: 16px; background: rgba(15, 23, 42, 0.6); color: var(--dark-text);">
+        </div>
+
+        <div style="margin-bottom: 20px;">
+            <label for="address" style="display: block; margin-bottom: 8px; font-weight: 500; color: var(--dark-text);">Address</label>
+            <textarea id="address" name="address" rows="3" style="width: 100%; padding: 14px 16px; border: 2px solid var(--dark-border); border-radius: 10px; font-size: 16px; resize: vertical; background: rgba(15, 23, 42, 0.6); color: var(--dark-text);"><?php echo htmlspecialchars(old('address', $user->therapist ? $user->therapist->address : '')); ?></textarea>
+        </div>
+
+        <div style="margin-bottom: 20px;">
+            <label for="bio" style="display: block; margin-bottom: 8px; font-weight: 500; color: var(--dark-text);">Bio / About</label>
+            <textarea id="bio" name="bio" rows="4" style="width: 100%; padding: 14px 16px; border: 2px solid var(--dark-border); border-radius: 10px; font-size: 16px; resize: vertical; background: rgba(15, 23, 42, 0.6); color: var(--dark-text);"><?php echo htmlspecialchars(old('bio', $user->therapist ? $user->therapist->bio : '')); ?></textarea>
+        </div>
+
+        <div style="margin-bottom: 30px;">
+            <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                <input type="checkbox" name="is_available" value="1" <?php echo old('is_available', $user->therapist && $user->therapist->is_available) ? 'checked' : ''; ?> style="width: 20px; height: 20px; cursor: pointer; accent-color: var(--primary);">
+                <span style="font-weight: 500; color: var(--dark-text);">Make therapist available for bookings</span>
+            </label>
+        </div>
+
+        <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+            <button type="submit" class="btn btn-primary" style="flex: 1; min-width: 140px;">Update Therapist</button>
+            <a href="<?php echo route('staff.therapists.index'); ?>" class="btn" style="background: rgba(15, 23, 42, 0.6); color: var(--dark-text); border: 2px solid var(--dark-border); flex: 1; min-width: 140px; text-align: center; text-decoration: none;">Cancel</a>
+        </div>
+    </form>
+</div>
+<?php
+$content = ob_get_clean();
+include resource_path('views/layouts/admin.html');
+?>
+

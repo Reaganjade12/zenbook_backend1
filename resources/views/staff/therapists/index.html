@@ -1,0 +1,80 @@
+<?php
+$title = 'Manage Therapists - ZenBook';
+ob_start();
+?>
+<div class="page-header" style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 20px; margin-bottom: 30px;">
+    <div style="flex: 1; min-width: 200px;">
+        <h1 style="font-size: clamp(24px, 5vw, 32px); color: var(--dark-text); margin-bottom: 8px;">Manage Therapists</h1>
+        <p style="color: var(--dark-text-muted); font-size: 14px;">Add, edit, or remove massage therapists</p>
+    </div>
+    <a href="<?php echo route('staff.therapists.create'); ?>" class="btn btn-primary" style="white-space: nowrap; flex-shrink: 0;">
+        Add New Therapist
+    </a>
+</div>
+
+<div class="card">
+    <?php if ($therapists->count() > 0): ?>
+        <div style="overflow-x: auto;">
+            <table class="table" style="width: 100%; border-collapse: collapse;">
+                <thead>
+                    <tr style="background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%); color: white;">
+                        <th style="padding: 15px; text-align: left; font-weight: 600;">ID</th>
+                        <th style="padding: 15px; text-align: left; font-weight: 600;">Name</th>
+                        <th style="padding: 15px; text-align: left; font-weight: 600;">Email</th>
+                        <th style="padding: 15px; text-align: left; font-weight: 600;">Phone</th>
+                        <th style="padding: 15px; text-align: left; font-weight: 600;">Availability</th>
+                        <th style="padding: 15px; text-align: left; font-weight: 600;">Registered</th>
+                        <th style="padding: 15px; text-align: left; font-weight: 600;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach($therapists as $therapist): ?>
+                    <tr style="border-bottom: 1px solid var(--border);">
+                        <td data-label="ID" style="padding: 15px; color: var(--dark-text-muted);">#<?php echo $therapist->id; ?></td>
+                        <td data-label="Name" style="padding: 15px; font-weight: 500; color: var(--dark-text);"><?php echo htmlspecialchars($therapist->name); ?></td>
+                        <td data-label="Email" style="padding: 15px; color: var(--dark-text);"><?php echo htmlspecialchars($therapist->email); ?></td>
+                        <td data-label="Phone" style="padding: 15px; color: var(--dark-text-muted);">
+                            <?php echo $therapist->therapist && $therapist->therapist->phone ? htmlspecialchars($therapist->therapist->phone) : '-'; ?>
+                        </td>
+                        <td data-label="Availability" style="padding: 15px;">
+                            <?php if ($therapist->therapist): ?>
+                                <span style="padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 500; background: <?php echo $therapist->therapist->is_available ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)'; ?>; color: <?php echo $therapist->therapist->is_available ? '#34d399' : '#f87171'; ?>; border: 1px solid <?php echo $therapist->therapist->is_available ? 'rgba(16, 185, 129, 0.3)' : 'rgba(239, 68, 68, 0.3)'; ?>;">
+                                    <?php echo $therapist->therapist->is_available ? 'Available' : 'Unavailable'; ?>
+                                </span>
+                            <?php else: ?>
+                                <span style="color: var(--dark-text-muted);">-</span>
+                            <?php endif; ?>
+                        </td>
+                        <td data-label="Registered" style="padding: 15px; color: var(--dark-text-muted); font-size: 13px;">
+                            <?php echo $therapist->created_at->format('M d, Y'); ?>
+                        </td>
+                        <td data-label="Actions" style="padding: 15px;">
+                            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                                <a href="<?php echo route('staff.therapists.edit', $therapist->id); ?>" class="btn btn-warning" style="padding: 8px 16px; font-size: 13px; text-decoration: none; flex: 1; min-width: 80px; text-align: center;">
+                                    Edit
+                                </a>
+                                <form action="<?php echo route('staff.therapists.delete', $therapist->id); ?>" method="POST" style="display: inline; flex: 1; min-width: 80px;" onsubmit="return confirm('Are you sure you want to delete this therapist?');">
+                                    <input type="hidden" name="_token" value="<?php echo csrf_token(); ?>">
+                                    <input type="hidden" name="_method" value="DELETE">
+                                    <button type="submit" class="btn btn-danger" style="padding: 8px 16px; font-size: 13px; width: 100%;">Delete</button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
+    <?php else: ?>
+        <div style="text-align: center; padding: 60px 20px;">
+            <h3 style="color: var(--dark-text); margin-bottom: 10px; font-family: 'Space Grotesk', sans-serif; font-weight: 600;">No therapists found</h3>
+            <p style="color: var(--dark-text-muted); margin-bottom: 25px;">Get started by adding your first therapist</p>
+            <a href="<?php echo route('staff.therapists.create'); ?>" class="btn btn-primary">Add New Therapist</a>
+        </div>
+    <?php endif; ?>
+</div>
+<?php
+$content = ob_get_clean();
+include resource_path('views/layouts/admin.html');
+?>
+

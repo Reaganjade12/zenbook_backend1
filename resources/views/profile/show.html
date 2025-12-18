@@ -1,0 +1,302 @@
+<?php
+$title = 'My Profile - ZenBook';
+ob_start();
+?>
+<?php if (Auth::user()->isStaff()): ?>
+<div class="page-header">
+    <h2>My Profile</h2>
+    <p>Manage your account information and preferences</p>
+</div>
+<?php endif; ?>
+
+<div class="card" style="max-width: 900px; margin: <?php echo Auth::user()->isStaff() ? '0' : '0 auto'; ?>; background: var(--dark-card); border: 1px solid var(--dark-border);">
+    <?php if (!Auth::user()->isStaff()): ?>
+    <div style="text-align: center; margin-bottom: 40px;">
+        <div style="font-size: 48px; margin-bottom: 10px; color: var(--dark-text-muted);">👤</div>
+        <h1 style="margin: 0; font-family: 'Space Grotesk', sans-serif; font-weight: 800; color: white;">My Profile</h1>
+        <p style="color: var(--dark-text-muted); margin-top: 8px; font-size: 14px;">Manage your account information</p>
+    </div>
+    <?php endif; ?>
+    
+    <!-- Success/Error Messages -->
+    <?php if (session('success')): ?>
+    <div style="background: #10b981; color: white; padding: 15px 20px; border-radius: 8px; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+        <span style="font-size: 20px;">✓</span>
+        <span><?php echo htmlspecialchars(session('success')); ?></span>
+    </div>
+    <?php endif; ?>
+    
+    <?php if (session('error')): ?>
+    <div style="background: #ef4444; color: white; padding: 15px 20px; border-radius: 8px; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+        <span style="font-size: 20px;">✗</span>
+        <span><?php echo htmlspecialchars(session('error')); ?></span>
+    </div>
+    <?php endif; ?>
+    
+    <?php if (isset($errors) && $errors->any()): ?>
+    <div style="background: #ef4444; color: white; padding: 15px 20px; border-radius: 8px; margin-bottom: 20px;">
+        <strong>Errors:</strong>
+        <ul style="margin: 10px 0 0 20px; padding: 0;">
+            <?php foreach($errors->all() as $error): ?>
+            <li><?php echo htmlspecialchars($error); ?></li>
+            <?php endforeach; ?>
+        </ul>
+    </div>
+    <?php endif; ?>
+
+    <!-- Profile Header Card -->
+    <div style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); border-radius: 20px; padding: 40px; margin-bottom: 30px; text-align: center; color: white; position: relative; overflow: hidden;">
+        <div style="position: absolute; top: -50px; right: -50px; width: 200px; height: 200px; background: rgba(255,255,255,0.1); border-radius: 50%;"></div>
+        <div style="position: absolute; bottom: -30px; left: -30px; width: 150px; height: 150px; background: rgba(255,255,255,0.1); border-radius: 50%;"></div>
+        
+        <div style="position: relative; z-index: 1;">
+            <div style="position: relative; display: inline-block; margin-bottom: 20px;">
+                <?php 
+                // Generate profile image URL with proper error handling
+                $profileImageUrl = null;
+                $imageExists = false;
+                
+                if ($user->profile_image) {
+                    try {
+                        $imagePath = $user->profile_image;
+                        $imageExists = \Illuminate\Support\Facades\Storage::disk('public')->exists($imagePath);
+                        
+                        if ($imageExists) {
+                            // Use asset() helper to generate correct URL based on current request
+                            // This ensures it works with both localhost and 127.0.0.1
+                            $storageUrl = \Illuminate\Support\Facades\Storage::disk('public')->url($imagePath);
+                            
+                            // If URL starts with http://localhost but we're on 127.0.0.1, fix it
+                            $currentUrl = request()->getSchemeAndHttpHost();
+                            if (strpos($storageUrl, 'http://localhost') === 0 && strpos($currentUrl, '127.0.0.1') !== false) {
+                                $storageUrl = str_replace('http://localhost', $currentUrl, $storageUrl);
+                            }
+                            
+                            $profileImageUrl = $storageUrl . '?v=' . ($user->updated_at ? $user->updated_at->timestamp : time());
+                        } else {
+                            // Log that image path exists in DB but file doesn't exist
+                            \Illuminate\Support\Facades\Log::warning('Profile image path in DB but file not found', [
+                                'user_id' => $user->id,
+                                'image_path' => $imagePath,
+                            ]);
+                        }
+                    } catch (\Exception $e) {
+                        \Illuminate\Support\Facades\Log::error('Error generating profile image URL', [
+                            'error' => $e->getMessage(),
+                            'user_id' => $user->id,
+                            'image_path' => $user->profile_image,
+                        ]);
+                    }
+                }
+                
+                // Use default placeholder if no valid image URL
+                if (!$profileImageUrl) {
+                    $profileImageUrl = 'data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%27150%27 height=%27150%27%3E%3Crect fill=%27%23ffffff%27 width=%27150%27 height=%27150%27/%3E%3Ctext x=%2750%25%27 y=%2750%25%27 text-anchor=%27middle%27 dy=%27.3em%27 fill=%27%23334155%27 font-family=%27Arial%27 font-size=%2740%27%3E👤%3C/text%3E%3C/svg%3E';
+                }
+                ?>
+                <img 
+                    id="profile-image-preview" 
+                    src="<?php echo htmlspecialchars($profileImageUrl); ?>" 
+                    alt="Profile Image" 
+                    style="width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 5px solid white; box-shadow: 0 10px 40px rgba(0,0,0,0.2);"
+                    onerror="console.error('Image load error:', this.src); this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%27150%27 height=%27150%27%3E%3Crect fill=%27%23ffffff%27 width=%27150%27 height=%27150%27/%3E%3Ctext x=%2750%25%27 y=%2750%25%27 text-anchor=%27middle%27 dy=%27.3em%27 fill=%27%23334155%27 font-family=%27Arial%27 font-size=%2740%27%3E👤%3C/text%3E%3C/svg%3E';"
+                >
+                <label for="profile_image" style="position: absolute; bottom: 5px; right: 5px; background: white; color: #3b82f6; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.3); transition: all 0.3s ease; font-size: 18px;" onmouseover="this.style.transform='scale(1.1)'; this.style.boxShadow='0 6px 20px rgba(0,0,0,0.4)'" onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 4px 15px rgba(0,0,0,0.3)'">
+                    📷
+                </label>
+            </div>
+            <h2 style="margin: 0; font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 28px; color: white;"><?php echo htmlspecialchars($user->name); ?></h2>
+            <p style="margin: 8px 0 0 0; opacity: 0.9; font-size: 15px;">
+                <?php echo $user->role == 'cleaner' ? 'Massage Therapist' : ucfirst($user->role); ?>
+            </p>
+            
+            
+            <?php if ($user->profile_image): ?>
+            <form action="<?php echo route('profile.image.delete'); ?>" method="POST" id="deleteImageForm" style="display: inline-block; margin-top: 15px;">
+                <?php echo csrf_field(); ?>
+                <?php echo method_field('DELETE'); ?>
+                <button type="submit" class="btn" style="background: rgba(255,255,255,0.2); color: white; border: 2px solid white; padding: 8px 20px; font-size: 13px; border-radius: 20px;" onclick="return confirm('Are you sure you want to delete your profile image?');">Remove Image</button>
+            </form>
+            <?php endif; ?>
+        </div>
+    </div>
+
+    <form method="POST" action="<?php echo route('profile.update'); ?>" enctype="multipart/form-data" id="profileUpdateForm">
+        <input type="hidden" name="_token" value="<?php echo csrf_token(); ?>">
+        
+        <!-- File input for profile image (inside form) -->
+        <input type="file" id="profile_image" name="profile_image" accept="image/*" style="display: none;" onchange="previewImage(this)">
+        
+        <!-- Personal Information Card -->
+        <div style="background: var(--dark-card); border-radius: 16px; padding: 30px; margin-bottom: 25px; border: 1px solid var(--dark-border);">
+            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 25px; padding-bottom: 20px; border-bottom: 1px solid var(--dark-border);">
+                <div style="width: 40px; height: 40px; background: rgba(59, 130, 246, 0.2); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; color: white; line-height: 1;">👤</div>
+                <h3 style="margin: 0; font-family: 'Space Grotesk', sans-serif; font-weight: 700; letter-spacing: -0.02em; color: white; font-size: 22px;">Personal Information</h3>
+            </div>
+            
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;">
+                <div class="form-group">
+                    <label for="name" style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px; font-weight: 600; color: var(--dark-text); font-size: 14px;">
+                        <span style="color: white;">👤</span> Full Name
+                    </label>
+                    <input type="text" id="name" name="name" value="<?php echo htmlspecialchars($user->name); ?>" required style="width: 100%; padding: 14px 18px; background: rgba(255,255,255,0.05); border: 1px solid var(--dark-border); border-radius: 12px; font-size: 15px; color: white; transition: all 0.3s ease; font-family: 'Inter', sans-serif;" onfocus="this.style.borderColor='#3b82f6'; this.style.background='rgba(255,255,255,0.08)'; this.style.boxShadow='0 0 0 4px rgba(59, 130, 246, 0.1)'" onblur="this.style.borderColor='var(--dark-border)'; this.style.background='rgba(255,255,255,0.05)'; this.style.boxShadow='none'" placeholder="Enter your full name">
+                </div>
+
+                <div class="form-group">
+                    <label for="email" style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px; font-weight: 600; color: var(--dark-text); font-size: 14px;">
+                        <span style="color: white;">📧</span> Email Address
+                    </label>
+                    <input type="email" id="email" name="email" value="<?php echo htmlspecialchars($user->email); ?>" required style="width: 100%; padding: 14px 18px; background: rgba(255,255,255,0.05); border: 1px solid var(--dark-border); border-radius: 12px; font-size: 15px; color: white; transition: all 0.3s ease; font-family: 'Inter', sans-serif;" onfocus="this.style.borderColor='#3b82f6'; this.style.background='rgba(255,255,255,0.08)'; this.style.boxShadow='0 0 0 4px rgba(59, 130, 246, 0.1)'" onblur="this.style.borderColor='var(--dark-border)'; this.style.background='rgba(255,255,255,0.05)'; this.style.boxShadow='none'" placeholder="Enter your email">
+                </div>
+
+                <div class="form-group">
+                    <label for="phone" style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px; font-weight: 600; color: var(--dark-text); font-size: 14px;">
+                        <span style="color: white;">📱</span> Phone Number
+                    </label>
+                    <input type="tel" id="phone" name="phone" value="<?php echo htmlspecialchars($user->phone ?? ''); ?>" placeholder="Enter your phone number" style="width: 100%; padding: 14px 18px; background: rgba(255,255,255,0.05); border: 1px solid var(--dark-border); border-radius: 12px; font-size: 15px; color: white; transition: all 0.3s ease; font-family: 'Inter', sans-serif;" onfocus="this.style.borderColor='#3b82f6'; this.style.background='rgba(255,255,255,0.08)'; this.style.boxShadow='0 0 0 4px rgba(59, 130, 246, 0.1)'" onblur="this.style.borderColor='var(--dark-border)'; this.style.background='rgba(255,255,255,0.05)'; this.style.boxShadow='none'">
+                </div>
+            </div>
+        </div>
+
+        <!-- Additional Information Card -->
+        <div style="background: var(--dark-card); border-radius: 16px; padding: 30px; margin-bottom: 25px; border: 1px solid var(--dark-border);">
+            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 25px; padding-bottom: 20px; border-bottom: 1px solid var(--dark-border);">
+                <div style="width: 40px; height: 40px; background: rgba(59, 130, 246, 0.2); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; color: white; line-height: 1;">📍</div>
+                <h3 style="margin: 0; font-family: 'Space Grotesk', sans-serif; font-weight: 700; letter-spacing: -0.02em; color: white; font-size: 22px;">Additional Information</h3>
+            </div>
+            
+            <div class="form-group" style="margin-bottom: 20px;">
+                <label for="address" style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px; font-weight: 600; color: var(--dark-text); font-size: 14px;">
+                    <span style="color: white;">🏠</span> Address
+                </label>
+                <textarea id="address" name="address" rows="3" placeholder="Enter your address" style="width: 100%; padding: 14px 18px; background: rgba(255,255,255,0.05); border: 1px solid var(--dark-border); border-radius: 12px; font-size: 15px; color: white; transition: all 0.3s ease; font-family: 'Inter', sans-serif; resize: vertical;" onfocus="this.style.borderColor='#3b82f6'; this.style.background='rgba(255,255,255,0.08)'; this.style.boxShadow='0 0 0 4px rgba(59, 130, 246, 0.1)'" onblur="this.style.borderColor='var(--dark-border)'; this.style.background='rgba(255,255,255,0.05)'; this.style.boxShadow='none'"><?php echo htmlspecialchars($user->address ?? ''); ?></textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="bio" style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px; font-weight: 600; color: var(--dark-text); font-size: 14px;">
+                    <span style="color: white;">📝</span> Bio / About Me
+                </label>
+                <textarea id="bio" name="bio" rows="4" placeholder="Tell us about yourself..." style="width: 100%; padding: 14px 18px; background: rgba(255,255,255,0.05); border: 1px solid var(--dark-border); border-radius: 12px; font-size: 15px; color: white; transition: all 0.3s ease; font-family: 'Inter', sans-serif; resize: vertical;" onfocus="this.style.borderColor='#3b82f6'; this.style.background='rgba(255,255,255,0.08)'; this.style.boxShadow='0 0 0 4px rgba(59, 130, 246, 0.1)'" onblur="this.style.borderColor='var(--dark-border)'; this.style.background='rgba(255,255,255,0.05)'; this.style.boxShadow='none'"><?php echo htmlspecialchars($user->bio ?? ''); ?></textarea>
+            </div>
+        </div>
+
+        <!-- Account Information Card -->
+        <div style="background: var(--dark-card); border-radius: 16px; padding: 30px; margin-bottom: 30px; border: 1px solid var(--dark-border);">
+            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 25px; padding-bottom: 20px; border-bottom: 1px solid var(--dark-border);">
+                <div style="width: 40px; height: 40px; background: rgba(59, 130, 246, 0.2); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; color: white; line-height: 1;">⚙️</div>
+                <h3 style="margin: 0; font-family: 'Space Grotesk', sans-serif; font-weight: 700; letter-spacing: -0.02em; color: white; font-size: 22px;">Account Information</h3>
+            </div>
+            
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
+                <div style="background: rgba(255,255,255,0.05); padding: 20px; border-radius: 12px; border: 1px solid var(--dark-border);">
+                    <label style="display: block; color: var(--dark-text-muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; margin-bottom: 8px;">Role</label>
+                    <p style="font-weight: 700; color: white; margin: 0; font-size: 18px; font-family: 'Space Grotesk', sans-serif;">
+                        <?php echo $user->role == 'cleaner' ? 'Massage Therapist' : ucfirst($user->role); ?>
+                    </p>
+                </div>
+                <div style="background: rgba(255,255,255,0.05); padding: 20px; border-radius: 12px; border: 1px solid var(--dark-border);">
+                    <label style="display: block; color: var(--dark-text-muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; margin-bottom: 8px;">Member Since</label>
+                    <p style="font-weight: 700; color: white; margin: 0; font-size: 18px; font-family: 'Space Grotesk', sans-serif;">
+                        <?php echo $user->created_at->format('M d, Y'); ?>
+                    </p>
+                </div>
+                <div style="background: rgba(255,255,255,0.05); padding: 20px; border-radius: 12px; border: 1px solid var(--dark-border);">
+                    <label style="display: block; color: var(--dark-text-muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; margin-bottom: 8px;">Email Verified</label>
+                    <p style="font-weight: 700; margin: 0; font-size: 18px; font-family: 'Space Grotesk', sans-serif; color: <?php echo $user->email_verified_at ? '#34d399' : '#f87171'; ?>;">
+                        <?php echo $user->email_verified_at ? '✓ Verified' : '✗ Not Verified'; ?>
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div style="display: flex; gap: 15px; margin-top: 30px; padding-top: 30px; border-top: 1px solid var(--dark-border);">
+            <button type="submit" class="btn btn-primary" style="flex: 1; padding: 16px; font-size: 16px; font-weight: 600; background: #3b82f6; color: white;">
+                💾 Save Changes
+            </button>
+            <?php 
+            $dashboardRoute = 'customer.dashboard';
+            if ($user->isStaff()) {
+                $dashboardRoute = 'staff.dashboard';
+            } elseif ($user->isCleaner()) {
+                $dashboardRoute = 'therapist.dashboard';
+            }
+            ?>
+            <a href="<?php echo route($dashboardRoute); ?>" class="btn" style="background: rgba(255,255,255,0.05); color: var(--dark-text); border: 1px solid var(--dark-border); flex: 1; text-align: center; text-decoration: none; padding: 16px; font-size: 16px; font-weight: 600;">
+                ← Cancel
+            </a>
+        </div>
+    </form>
+</div>
+
+<script>
+function previewImage(input) {
+    if (input.files && input.files[0]) {
+        const file = input.files[0];
+        const maxSize = 2 * 1024 * 1024; // 2MB
+        
+        // Validate file size
+        if (file.size > maxSize) {
+            alert('Image size must be less than 2MB. Current size: ' + (file.size / 1024 / 1024).toFixed(2) + 'MB');
+            input.value = '';
+            return;
+        }
+        
+        // Validate file type
+        const validTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/gif'];
+        if (!validTypes.includes(file.type)) {
+            alert('Invalid file type. Please upload a JPEG, PNG, or GIF image.');
+            input.value = '';
+            return;
+        }
+        
+        console.log('Image selected:', {
+            name: file.name,
+            type: file.type,
+            size: file.size,
+            sizeMB: (file.size / 1024 / 1024).toFixed(2)
+        });
+        
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            document.getElementById('profile-image-preview').src = e.target.result;
+            console.log('Image preview loaded successfully');
+        };
+        reader.onerror = function(e) {
+            console.error('Error reading file:', e);
+            alert('Error reading image file. Please try again.');
+        };
+        reader.readAsDataURL(file);
+    }
+}
+
+// Add form submission logging
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('profileUpdateForm');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            const fileInput = document.getElementById('profile_image');
+            if (fileInput && fileInput.files && fileInput.files[0]) {
+                console.log('Submitting form with image:', {
+                    fileName: fileInput.files[0].name,
+                    fileSize: fileInput.files[0].size,
+                    fileType: fileInput.files[0].type
+                });
+            } else {
+                console.log('Submitting form without new image');
+            }
+        });
+    }
+});
+</script>
+<?php
+$content = ob_get_clean();
+// Use appropriate layout based on user role
+if (Auth::user()->isStaff()) {
+    include resource_path('views/layouts/admin.html');
+} elseif (Auth::user()->isCleaner()) {
+    include resource_path('views/layouts/therapist.html');
+} else {
+    include resource_path('views/layouts/app.html');
+}
+?>

@@ -1,0 +1,74 @@
+<?php
+$title = 'My Bookings - ZenBook';
+ob_start();
+?>
+<div class="card">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 30px; flex-wrap: wrap; gap: 20px;">
+        <div style="flex: 1; min-width: 200px;">
+            <h1 style="margin: 0; font-size: clamp(24px, 5vw, 36px);">My Massage Bookings</h1>
+            <p style="color: var(--text-light); margin-top: 5px; font-size: 14px;">Manage your appointments</p>
+        </div>
+        <div style="display: flex; gap: 12px; flex-wrap: wrap; width: 100%; max-width: 100%;">
+            <a href="<?php echo route('profile.show'); ?>" class="btn" style="background: rgba(15, 23, 42, 0.6); color: var(--text-white); border: 2px solid var(--dark-border); flex: 1; min-width: 120px;">
+                Profile
+            </a>
+            <a href="<?php echo route('customer.booking.create'); ?>" class="btn btn-primary" style="flex: 1; min-width: 140px;">
+                Book New Session
+            </a>
+        </div>
+    </div>
+
+    <div class="filter-buttons">
+        <a href="<?php echo route('customer.dashboard'); ?>" class="filter-btn <?php echo !request('status') ? 'active' : ''; ?>">All</a>
+        <a href="<?php echo route('customer.dashboard', ['status' => 'pending']); ?>" class="filter-btn <?php echo request('status') == 'pending' ? 'active' : ''; ?>">Pending</a>
+        <a href="<?php echo route('customer.dashboard', ['status' => 'approved']); ?>" class="filter-btn <?php echo request('status') == 'approved' ? 'active' : ''; ?>">Approved</a>
+        <a href="<?php echo route('customer.dashboard', ['status' => 'declined']); ?>" class="filter-btn <?php echo request('status') == 'declined' ? 'active' : ''; ?>">Declined</a>
+        <a href="<?php echo route('customer.dashboard', ['status' => 'in_progress']); ?>" class="filter-btn <?php echo request('status') == 'in_progress' ? 'active' : ''; ?>">In Progress</a>
+        <a href="<?php echo route('customer.dashboard', ['status' => 'completed']); ?>" class="filter-btn <?php echo request('status') == 'completed' ? 'active' : ''; ?>">Completed</a>
+    </div>
+
+    <?php if ($bookings->count() > 0): ?>
+        <div style="overflow-x: auto;">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Time</th>
+                        <th>Massage Type</th>
+                        <th>Location</th>
+                        <th>Status</th>
+                        <th>Therapist</th>
+                        <th>Created</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach($bookings as $booking): ?>
+                    <tr>
+                        <td data-label="Date" style="font-weight: 500;"><?php echo $booking->booking_date->format('M d, Y'); ?></td>
+                        <td data-label="Time"><?php echo date('h:i A', strtotime($booking->booking_time)); ?></td>
+                        <td data-label="Massage Type" style="font-weight: 500;"><?php echo htmlspecialchars($booking->service_type); ?></td>
+                        <td data-label="Location"><?php echo htmlspecialchars(Str::limit($booking->address, 30)); ?></td>
+                        <td data-label="Status">
+                            <span class="badge badge-<?php echo str_replace('_', '-', $booking->status); ?>">
+                                <?php echo ucfirst(str_replace('_', ' ', $booking->status)); ?>
+                            </span>
+                        </td>
+                        <td data-label="Therapist" style="color: var(--text-white);"><?php echo $booking->therapist ? htmlspecialchars($booking->therapist->name) : ($booking->cleaner ? htmlspecialchars($booking->cleaner->name) : '<span style="color: var(--text-light);">Not assigned</span>'); ?></td>
+                        <td data-label="Created" style="color: var(--text-light); font-size: 13px;"><?php echo $booking->created_at->format('M d, Y'); ?></td>
+                    </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
+    <?php else: ?>
+        <div style="text-align: center; padding: 40px 20px;">
+            <h3 style="color: var(--text-white); margin-bottom: 10px; font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: clamp(20px, 4vw, 24px);">No bookings yet</h3>
+            <p style="color: var(--text-light); margin-bottom: 30px; font-size: 14px;">Start your wellness journey by booking your first massage session</p>
+            <a href="<?php echo route('customer.booking.create'); ?>" class="btn btn-primary" style="max-width: 300px; margin: 0 auto;">Book Your First Session</a>
+        </div>
+    <?php endif; ?>
+</div>
+<?php
+$content = ob_get_clean();
+include resource_path('views/layouts/app.html');
+?>

@@ -1,0 +1,158 @@
+<?php
+$title = 'Manage Bookings - ZenBook';
+ob_start();
+?>
+<div class="page-header">
+    <h1>Manage Bookings</h1>
+    <p>View and manage all your booking requests</p>
+</div>
+
+<div class="card">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; flex-wrap: wrap; gap: 15px;">
+        <div>
+            <h2 style="margin: 0; font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 24px; color: var(--text-dark); display: flex; align-items: center; gap: 12px;">
+                <span style="width: 40px; height: 40px; background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; color: white;">📅</span>
+                All Bookings
+            </h2>
+            <p style="color: var(--text-light); margin-top: 8px; font-size: 14px;">Accept, decline, or update booking status</p>
+        </div>
+        <div style="display: flex; gap: 12px;">
+            <form action="<?php echo route('therapist.toggle-availability'); ?>" method="POST" style="display: inline;">
+                <input type="hidden" name="_token" value="<?php echo csrf_token(); ?>">
+                <button type="submit" class="btn" style="background: <?php echo isset($isAvailable) && $isAvailable ? '#10b981' : '#ef4444'; ?>; color: white; border: none; display: flex; align-items: center; gap: 8px; text-decoration: none;">
+                    <?php if (isset($isAvailable) && $isAvailable): ?>
+                        <span>✓</span> Available
+                    <?php else: ?>
+                        <span>✗</span> Unavailable
+                    <?php endif; ?>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <?php if (isset($isAvailable) && !$isAvailable): ?>
+        <div style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border-left: 4px solid #f59e0b; padding: 16px 20px; border-radius: 12px; margin-bottom: 25px; display: flex; align-items: center; gap: 12px;">
+            <div style="font-size: 24px;">⚠️</div>
+            <div>
+                <strong style="color: #92400e;">You are currently unavailable</strong>
+                <p style="color: #78350f; margin: 4px 0 0 0; font-size: 13px;">Customers cannot select you for new bookings. Toggle above to make yourself available.</p>
+            </div>
+        </div>
+    <?php endif; ?>
+
+    <div class="filter-buttons">
+        <a href="<?php echo route('therapist.bookings'); ?>" class="filter-btn <?php echo !request('status') ? 'active' : ''; ?>">
+            📊 All
+        </a>
+        <a href="<?php echo route('therapist.bookings', ['status' => 'pending']); ?>" class="filter-btn <?php echo request('status') == 'pending' ? 'active' : ''; ?>">
+            ⏳ Pending
+        </a>
+        <a href="<?php echo route('therapist.bookings', ['status' => 'approved']); ?>" class="filter-btn <?php echo request('status') == 'approved' ? 'active' : ''; ?>">
+            ✅ Approved
+        </a>
+        <a href="<?php echo route('therapist.bookings', ['status' => 'in_progress']); ?>" class="filter-btn <?php echo request('status') == 'in_progress' ? 'active' : ''; ?>">
+            🔄 In Progress
+        </a>
+        <a href="<?php echo route('therapist.bookings', ['status' => 'completed']); ?>" class="filter-btn <?php echo request('status') == 'completed' ? 'active' : ''; ?>">
+            🎉 Completed
+        </a>
+    </div>
+
+    <?php if ($bookings->count() > 0): ?>
+        <div style="overflow-x: auto; border-radius: 16px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Time</th>
+                        <th>Customer</th>
+                        <th>Massage Type</th>
+                        <th>Location</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach($bookings as $booking): ?>
+                    <tr>
+                        <td style="font-weight: 600; color: var(--text-dark);"><?php echo $booking->booking_date->format('M d, Y'); ?></td>
+                        <td style="color: var(--text-dark);"><?php echo date('h:i A', strtotime($booking->booking_time)); ?></td>
+                        <td style="font-weight: 600; color: var(--text-dark);">
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <span style="width: 32px; height: 32px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 14px; font-weight: 600;"><?php echo strtoupper(substr($booking->customer->name, 0, 1)); ?></span>
+                                <?php echo htmlspecialchars($booking->customer->name); ?>
+                            </div>
+                        </td>
+                        <td style="color: var(--text-dark);">
+                            <span style="padding: 6px 12px; background: var(--bg-light); border-radius: 8px; font-size: 13px; font-weight: 500;"><?php echo htmlspecialchars($booking->service_type); ?></span>
+                        </td>
+                        <td style="color: var(--text-light);"><?php echo htmlspecialchars(strlen($booking->address) > 30 ? substr($booking->address, 0, 30) . '...' : $booking->address); ?></td>
+                        <td>
+                            <span class="badge badge-<?php echo str_replace('_', '-', $booking->status); ?>">
+                                <?php echo ucfirst(str_replace('_', ' ', $booking->status)); ?>
+                            </span>
+                        </td>
+                        <td>
+                            <?php if ($booking->status == 'pending' && $booking->therapist_id == Auth::id()): ?>
+                                <div style="display: flex; gap: 8px;">
+                                    <form action="<?php echo route('therapist.booking.accept', $booking->id); ?>" method="POST" style="display: inline;">
+                                        <input type="hidden" name="_token" value="<?php echo csrf_token(); ?>">
+                                        <button type="submit" class="btn btn-success" style="padding: 8px 16px; font-size: 13px; border-radius: 8px;">
+                                            ✓ Accept
+                                        </button>
+                                    </form>
+                                    <form action="<?php echo route('therapist.booking.decline', $booking->id); ?>" method="POST" style="display: inline;">
+                                        <input type="hidden" name="_token" value="<?php echo csrf_token(); ?>">
+                                        <button type="submit" class="btn btn-danger" style="padding: 8px 16px; font-size: 13px; border-radius: 8px;">
+                                            ✗ Decline
+                                        </button>
+                                    </form>
+                                </div>
+                            <?php elseif ($booking->status == 'approved' && $booking->therapist_id == Auth::id()): ?>
+                                <form action="<?php echo route('therapist.booking.update-status', $booking->id); ?>" method="POST" style="display: inline;">
+                                    <input type="hidden" name="_token" value="<?php echo csrf_token(); ?>">
+                                    <input type="hidden" name="status" value="in_progress">
+                                    <button type="submit" class="btn btn-info" style="padding: 8px 16px; font-size: 13px; border-radius: 8px;">
+                                        ▶ Start Session
+                                    </button>
+                                </form>
+                            <?php elseif ($booking->status == 'in_progress' && $booking->therapist_id == Auth::id()): ?>
+                                <form action="<?php echo route('therapist.booking.update-status', $booking->id); ?>" method="POST" style="display: inline;">
+                                    <input type="hidden" name="_token" value="<?php echo csrf_token(); ?>">
+                                    <input type="hidden" name="status" value="completed">
+                                    <button type="submit" class="btn btn-success" style="padding: 8px 16px; font-size: 13px; border-radius: 8px;">
+                                        ✓ Complete
+                                    </button>
+                                </form>
+                            <?php elseif ($booking->status == 'completed'): ?>
+                                <span style="color: #10b981; font-weight: 600;">✓ Completed</span>
+                            <?php elseif ($booking->status == 'declined'): ?>
+                                <span style="color: #ef4444;">Declined</span>
+                            <?php endif; ?>
+                        </td>
+                    </tr>
+                    <?php if ($booking->notes): ?>
+                    <tr>
+                        <td colspan="7" style="background: var(--bg-light); padding: 16px 20px; border-radius: 8px;">
+                            <strong style="color: var(--text-dark);">📝 Notes:</strong> 
+                            <span style="color: var(--text-light);"><?php echo htmlspecialchars($booking->notes); ?></span>
+                        </td>
+                    </tr>
+                    <?php endif; ?>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
+    <?php else: ?>
+        <div style="text-align: center; padding: 60px 20px; background: var(--bg-light); border-radius: 16px;">
+            <div style="font-size: 64px; margin-bottom: 20px;">🧘</div>
+            <h3 style="color: var(--text-dark); margin-bottom: 10px; font-family: 'Space Grotesk', sans-serif; font-weight: 600;">No booking requests</h3>
+            <p style="color: var(--text-light);">New booking requests will appear here</p>
+        </div>
+    <?php endif; ?>
+</div>
+<?php
+$content = ob_get_clean();
+include resource_path('views/layouts/therapist.html');
+?>
+
